@@ -26,6 +26,22 @@ async function run() {
     // await client.connect();
 
     const serviceCollection = client.db('RoyalDB').collection('service');
+    const cardCollection = client.db('RoyalDB').collection('card');
+
+
+
+
+    app.get('/card', async (req, res) => {
+      const cursor = cardCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.post('/card', async (req, res) => {
+      const newService = req.body;
+      const result = await cardCollection.insertOne(newService);
+      res.send(result);
+    });
 
     app.get('/service', async (req, res) => {
       const cursor = serviceCollection.find();
