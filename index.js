@@ -29,20 +29,6 @@ async function run() {
     const cardCollection = client.db('RoyalDB').collection('card');
 
 
-
-
-    app.get('/card', async (req, res) => {
-      const cursor = cardCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    });
-
-    app.post('/card', async (req, res) => {
-      const newService = req.body;
-      const result = await cardCollection.insertOne(newService);
-      res.send(result);
-    });
-
     app.get('/service', async (req, res) => {
       const cursor = serviceCollection.find();
       const result = await cursor.toArray();
@@ -56,6 +42,57 @@ async function run() {
       res.send(result);
     });
 
+    //--------cards-->
+
+    app.get('/card', async (req, res) => {
+      let query = {}
+      if (req.query?.providerEmail) {
+        query = { providerEmail: req.query.providerEmail }
+      }
+      const result = await cardCollection.find(query).toArray();
+      res.send(result)
+    })
+
+    app.get('/card/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await cardCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.get('/card', async (req, res) => {
+      const cursor = cardCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    app.post('/card', async (req, res) => {
+      const newService = req.body;
+      const result = await cardCollection.insertOne(newService);
+      res.send(result);
+    });
+
+
+    app.put('/card/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }
+      const options = { upsert: true };
+      const updatedCard = req.body;
+      const Card = {
+        $set: {
+          ...updatedCard
+        }
+      }
+      const result = await cardCollection.updateOne(filter, Card, options);
+      res.send(result);
+    });
+
+    app.delete('/card/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await cardCollection.deleteOne(query);
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -68,9 +105,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send('Assignment_category_0002')
-  });
-  
-  app.listen(port, () => {
-    console.log(`Assignment_category_0002 server is running on port: ${port}`);
-  })
+  res.send('Assignment_category_0002')
+});
+
+app.listen(port, () => {
+  console.log(`Assignment_category_0002 server is running on port: ${port}`);
+})
