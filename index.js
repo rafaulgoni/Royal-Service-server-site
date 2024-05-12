@@ -44,6 +44,15 @@ async function run() {
 
     //--------cards-->
 
+    app.get('/cards', async (req, res) => {
+      let query = {}
+      if (req.query?.status) {
+        query = { status: req.query.status }
+      }
+      const result = await cardCollection.find(query).toArray();
+      res.send(result)
+    })
+
     app.get('/card', async (req, res) => {
       let query = {}
       if (req.query?.providerEmail) {
@@ -92,13 +101,13 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const updatedBooking = req.body;
       const updateDoc = {
-          $set: {
-              status: updatedBooking.status
-          },
+        $set: {
+          status: updatedBooking.status
+        },
       };
       const result = await cardCollection.updateOne(filter, updateDoc);
       res.send(result);
-  })
+    })
 
     app.delete('/card/:id', async (req, res) => {
       const id = req.params.id;
