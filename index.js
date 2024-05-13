@@ -13,6 +13,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
+      "https://assignment11-royal-service.web.app",
+      "https://assignment11-royal-service.firebaseapp.com"
     ],
     credentials: true,
   })
@@ -54,6 +56,12 @@ const verifyToken = (req, res, next) => {
   })
 }
 
+const cookeOption = {
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === "production" ? 'none' : 'strict',
+  secure: process.env.NODE_ENV === "production" ? true : false,
+  
+}
 
 async function run() {
   try {
@@ -68,18 +76,14 @@ async function run() {
       console.log('user for token', user);
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '9h' });
 
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none'
-      })
+      res.cookie('token', token, cookeOption)
         .send({ success: true });
     })
 
     app.post('/logout', async (req, res) => {
       const user = req.body;
       console.log('logging out', user);
-      res.clearCookie('token', { maxAge: 0 }).send({ success: true })
+      res.clearCookie('token', {...cookeOption ,maxAge: 0 }).send({ success: true })
     })
 
 
@@ -98,6 +102,24 @@ async function run() {
 
     //--------cards-->
 
+    app.get('/cardAll', async (req, res) => {
+      let query = {}
+      if (req.query?.name) {
+        query = { name: req.query.name }
+      }
+      const result = await cardCollection.find(query).toArray();
+      res.send(result)
+    });
+
+    app.get('/cardToDo', async (req, res) => {
+      let query = {}
+      if (req.query?.status) {
+        query = { status: req.query.status }
+      }
+      const result = await cardCollection.find(query).toArray();
+      res.send(result)
+    })
+
     app.get('/cards', async (req, res) => {
       let query = {}
       if (req.query?.status) {
@@ -108,6 +130,9 @@ async function run() {
     })
 
     app.get('/card', logger, async (req, res) => {
+      // if (req.user.email !== req.query.email) {
+      //   return res.status(403).send({ message: 'forbidden access' })
+      // }
       let query = {}
       if (req.query?.providerEmail) {
         query = { providerEmail: req.query.providerEmail }
@@ -123,11 +148,6 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/card', async (req, res) => {
-      const cursor = cardCollection.find();
-      const result = await cursor.toArray();
-      res.send(result);
-    });
 
     app.post('/card', async (req, res) => {
       const newService = req.body;
@@ -171,7 +191,7 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // await client.close();
